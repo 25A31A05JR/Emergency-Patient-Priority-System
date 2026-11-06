@@ -1,0 +1,246 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Patient {
+public:
+    string name;
+    int severity;
+    int arrivalTime;
+};
+
+class MaxHeap {
+    Patient heap[100];
+    int size;
+
+public:
+    MaxHeap() {
+        size = 0;
+    }
+
+    // Check patient priority
+    bool higherPriority(Patient a, Patient b) {
+        if (a.severity != b.severity) {
+            return a.severity > b.severity;
+        }
+        return a.arrivalTime < b.arrivalTime;
+    }
+
+    // Insert patient
+    void insert(Patient p) {
+        if (size == 100) {
+            cout << "Queue is full!\n";
+            return;
+        }
+
+        heap[size] = p;
+        int i = size;
+        size++;
+
+        while (i > 0) {
+            int parent = (i - 1) / 2;
+
+            if (higherPriority(heap[i], heap[parent])) {
+                swap(heap[i], heap[parent]);
+                i = parent;
+            } else {
+                break;
+            }
+        }
+
+        cout << "Patient added successfully!\n";
+    }
+
+    // View highest priority patient
+    void peek() {
+        if (size == 0) {
+            cout << "No patients available.\n";
+            return;
+        }
+
+        cout << "Next patient: " << heap[0].name << endl;
+        cout << "Severity: " << heap[0].severity << endl;
+    }
+
+    // Restore Max Heap property
+    void heapify(int i) {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        if (left < size &&
+            higherPriority(heap[left], heap[largest])) {
+            largest = left;
+        }
+
+        if (right < size &&
+            higherPriority(heap[right], heap[largest])) {
+            largest = right;
+        }
+
+        if (largest != i) {
+            swap(heap[i], heap[largest]);
+            heapify(largest);
+        }
+    }
+
+    // Treat highest priority patient
+    void extractMax() {
+        if (size == 0) {
+            cout << "No patients to treat.\n";
+            return;
+        }
+
+        Patient treated = heap[0];
+
+        heap[0] = heap[size - 1];
+        size--;
+
+        if (size > 0) {
+            heapify(0);
+        }
+
+        cout << "Patient treated: " << treated.name << endl;
+    }
+
+    // Update patient severity
+    void updateSeverity(string name, int newSeverity) {
+        for (int i = 0; i < size; i++) {
+            if (heap[i].name == name) {
+                heap[i].severity = newSeverity;
+
+                for (int j = size / 2 - 1; j >= 0; j--) {
+                    heapify(j);
+                }
+
+                cout << "Severity updated successfully!\n";
+                return;
+            }
+        }
+
+        cout << "Patient not found.\n";
+    }
+
+    // Display patients in priority order
+    void display() {
+        if (size == 0) {
+            cout << "No patients available.\n";
+            return;
+        }
+
+        Patient temp[100];
+        int originalSize = size;
+
+        for (int i = 0; i < size; i++) {
+            temp[i] = heap[i];
+        }
+
+        cout << "\nPatients in treatment priority order:\n";
+
+        while (size > 0) {
+            cout << temp[0].name
+                 << " - Severity: " << temp[0].severity << endl;
+
+            heap[0] = heap[size - 1];
+            size--;
+
+            if (size > 0) {
+                heapify(0);
+            }
+
+            // Update temporary copy for next iteration
+            for (int i = 0; i < size; i++) {
+                temp[i] = heap[i];
+            }
+        }
+
+        // Restore original heap
+        for (int i = 0; i < originalSize; i++) {
+            heap[i] = temp[i];
+        }
+        size = originalSize;
+    }
+};
+
+int main() {
+    MaxHeap hospital;
+    int choice;
+    int arrival = 0;
+
+    do {
+        cout << "\n===== HOSPITAL TRIAGE SYSTEM =====\n";
+        cout << "1. Add Patient\n";
+        cout << "2. View Next Patient\n";
+        cout << "3. Treat Patient\n";
+        cout << "4. Update Severity\n";
+        cout << "5. Display Patients\n";
+        cout << "6. Exit\n";
+
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+
+        case 1: {
+            Patient p;
+
+            cout << "Enter patient name: ";
+            cin >> p.name;
+
+            cout << "Enter severity (1-5): ";
+            cin >> p.severity;
+
+            if (p.severity < 1 || p.severity > 5) {
+                cout << "Invalid severity! Enter 1 to 5.\n";
+                break;
+            }
+
+            p.arrivalTime = ++arrival;
+
+            hospital.insert(p);
+            break;
+        }
+
+        case 2:
+            hospital.peek();
+            break;
+
+        case 3:
+            hospital.extractMax();
+            break;
+
+        case 4: {
+            string name;
+            int severity;
+
+            cout << "Enter patient name: ";
+            cin >> name;
+
+            cout << "Enter new severity (1-5): ";
+            cin >> severity;
+
+            if (severity < 1 || severity > 5) {
+                cout << "Invalid severity!\n";
+                break;
+            }
+
+            hospital.updateSeverity(name, severity);
+            break;
+        }
+
+        case 5:
+            hospital.display();
+            break;
+
+        case 6:
+            cout << "Thank you!\n";
+            break;
+
+        default:
+            cout << "Invalid choice!\n";
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
